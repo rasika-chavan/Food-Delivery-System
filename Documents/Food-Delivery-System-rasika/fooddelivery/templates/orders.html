@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block content %}
+<center> 
+    <h2><span class="title">{{ title }}</span></h2>
+    <div class="container" style="min-height: 100vh;">
+        {% if l==0 %}
+        <div class="content-section">
+            <h6>You haven't ordered anything yet!</h6>
+        </div>
+        {% else %}
+        <div class="row">
+            {% for j in range(l) %}
+            <div class="ml-5 mr-5 mb-5">
+                <h4>Order ID: {{ order[l-1-j].oid }}</h4>
+                <table class="table table-responsive table-condensed table_style table-borderless table-hover">
+                    <tbody>
+                        <tr>
+                            <th>Item Name</th>
+                            <td>{{ pname[l-1-j] }}</td>
+                        </tr>
+                        <tr>
+                            <th>Quantity</th>
+                            <td>{{ order[l-1-j].quantity }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Cost</th>
+                            <td><span class="currency">₹</span>{{ order[l-1-j].total }}</td>
+                        </tr>
+                        <tr>
+                            <th>Order Date</th>
+                            <td>{{ moment(order[l-1-j].order_date).format('MMMM Do YYYY, h:mm a') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Order Status</th>
+                            <td>{{ order[l-1-j].order_status }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <a href="{{url_for('transaction', transac_id=txn[l-1-j])}}">
+                                    <center>
+                                        <button class="btn btn-outline-primary">View Transaction</button>
+                                    </center>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <a href="{{url_for('shipping', id=order[l-1-j].oid)}}">
+                                    <center>
+                                        <button class="btn btn-outline-primary">Shipping Details</button>
+                                    </center>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</center>
+{% endblock content%}
