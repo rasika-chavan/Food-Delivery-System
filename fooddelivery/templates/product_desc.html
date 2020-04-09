@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container pt-5 pb-5">
+    <div class="card pl-3 pr-3" style="border:0.5px solid grey;">
+        <div class="row">
+            <aside class="col-sm-7 border-right">
+                    {% if img[0] %}
+                        <img src="data:;base64,{{ img[0] }}" class="img-fluid" width="600px">
+                    {% endif %}
+            </aside>
+
+            <!--right side -->
+            <aside class="col-sm-5 pt-5 pl-5">
+                {% if prod.category_id == 1%}
+                <h6 class="text-muted pt-3"><b>INDIAN</b></h6>
+                {% elif prod.category_id == 2%}
+                <h6 class="text-muted pt-3"><b>CHINESE</b></h6>
+                {% elif prod.category_id == 3%}
+                <h6 class="text-muted pt-3"><b>ITALIAN</b></h6>
+                {% elif prod.category_id == 4%}
+                <h6 class="text-muted pt-3"><b>FAST FOOD</b></h6>
+                {% elif prod.category_id == 5%}
+                <h6 class="text-muted pt-3"><b>ICE-CREAM AND BEVERAGES</b></h6>
+                {% endif%}
+
+                <h3>{{ prod.name }}   ({{prod.quantity}})</h3>
+                    <span class="price h3" style="color: brown;"> 
+                        <b><span class="currency">₹</span>
+                           <span class="num">{{ prod.cost }}</span></b>
+                    </span>
+                
+                <form method="POST" action="" class="text">
+                    {{ form.hidden_tag() }}						 
+                    <div class="form-group">
+                        <h6>{{ form.quantity.label(class="form-control-label") }}</h6>
+                        {% if form.quantity.errors %}
+                            {{ form.quantity(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.quantity.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.quantity(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.buy(class="btn btn-outline-warning btn-lg p-3 pb-2 btn-block") }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.add(class="btn btn-outline-warning btn-lg p-3 pb-2 btn-block") }}
+                    </div>
+                </form> 
+            </aside>				
+        </div>
+
+        <span class="pb-4"></span>
+        <ul class="nav nav-tabs">
+              <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#desp">Dish Description</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#nutrition">Nutrition Facts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#Shipping">Delivery Details</a>
+              </li>
+        </ul>
+        <div class="tab-content">
+            <div id="desp" class="container tab-pane active"><br>
+                <h1><p class="myproduct">{{ prod.details }}</p></h1>
+            </div>
+            <div id="nutrition" class="container tab-pane fade"><br>
+                  <h5><div class="abc">
+                  Type : {{ prod.food_type }}
+                  <br>Course : {{ prod.course_name }}
+                  <br>{{ prod.iaa }}
+                  <br>{{ prod.ibb }}
+                  <br>{{ prod.icc }}
+                  <br>{{ prod.idd }}
+                  <br>{{ prod.iee }}
+                  <br>{{ prod.iff }}</div></h5>
+                 
+            </div>
+            <div id="Shipping" class="container tab-pane fade"><br>
+                <h5><div class="abc"><p>We will deliver any food item to your location around 30 minutes.</p>
+                    <p>So, Sit back and relax, Your tasty food is on the way!!! </p></div></h5>
+            </div>
+          </div>
+          <hr>
+          <div class="container-fluid">
+            <h2 class="title"><center>You may also Like</center></h2>
+            <div class="card-columns">
+                <div class="card" style="width:100%">
+                    <a href="{{ url_for('categorypage', catname='chinese')}}"><img class="card-img-top" src="{{ url_for('static', filename='home1.jpg') }}" alt="Card image" style="width:100%"></a>
+                    <div class="card-body">
+                    <h4 class="card-title">Chinese</h4>
+                    <p class="card-text">Grab fantastic offers on chinese cuisine now!!! </p>
+                    <a href="#" class="btn btn-primary">Explore</a>
+                    </div>
+                </div>
+                <div class="card" style="width:100%">
+                  <a href="#"><img class="card-img-top" src="{{ url_for('static', filename='home2.jpg') }}" alt="Card image" style="width:100%"></a>
+                  <div class="card-body">
+                  <h4 class="card-title">Indian</h4>
+                  <p class="card-text">Order Authentic Indian food from top restrurant in city at lowest price!</p>
+                  <a href="{{ url_for('categorypage', catname='indian')}}" class="btn btn-primary">Explore</a>
+                  </div>
+              </div>
+                <div class="card" style="width:100%">
+                    <a href="#"><img class="card-img-top" src="{{ url_for('static', filename='home3.jpg') }}" alt="Card image" style="width:100%"></a>
+                    <div class="card-body">
+                    <h4 class="card-title">Fast food</h4>
+                    <p class="card-text">Upto 50% off on selected food items...Hurry up!!!</p>
+                    <a href="{{ url_for('categorypage', catname='fast food')}}" class="btn btn-primary">Explore</a>
+                    </div>
+                </div>
+               
+            
+        </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
