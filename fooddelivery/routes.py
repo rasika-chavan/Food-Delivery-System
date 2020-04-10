@@ -1,6 +1,5 @@
 
 import fooddelivery.dbmodel
-'''
 from flask import render_template, url_for, flash, redirect, request, session
 from fooddelivery import app, db, bcrypt
 from fooddelivery.forms import RegistrationForm, LoginForm, UpdateAccountForm, QuantityForm, PaymentDetails
@@ -16,8 +15,8 @@ b = []
 def home():
     return render_template('home.html')
 
-@app.route("/catneha")
-def catneha():
+@app.route("/menu")
+def menu():
     return render_template('categorygrid.html')
 
 @app.route("/about")
@@ -224,7 +223,7 @@ def checkout():
             u = UserTransac(uid=current_user.id, oid=o.oid, upiid=form.upiid.data, quantity=b[0][3], total=p.cost*b[0][3])
             db.session.add(u)
             db.session.commit()
-            delivery_date=datetime.utcnow()+timedelta(days=4)
+            delivery_date=datetime.utcnow()+timedelta(minutes=30)
             shipping = Shipping(oid=o.oid, transac_id=u.transac_id, delivery_date=delivery_date, contactno=form.contactno.data, 
                                 address_line1=form.addr1.data, address_line2=form.addr2.data, address_line3=form.addr3.data, 
                                 pincode=form.pincode.data, city=form.city.data, state=form.state.data, country=form.country.data)
@@ -261,7 +260,7 @@ def checkout():
                 u = UserTransac(uid=current_user.id, oid=o.oid, upiid=form.upiid.data, quantity=c[i].quantity, total=cost[i])
                 db.session.add(u)
                 db.session.commit()
-                delivery_date=datetime.utcnow()+timedelta(days=4)
+                delivery_date=datetime.utcnow()+timedelta(minutes=30)
                 shipping = Shipping(oid=o.oid, transac_id=u.transac_id, delivery_date=delivery_date, contactno=form.contactno.data, 
                                     address_line1=form.addr1.data, address_line2=form.addr2.data, address_line3=form.addr3.data, 
                                     pincode=form.pincode.data, city=form.city.data, state=form.state.data, country=form.country.data)
@@ -327,4 +326,4 @@ def shipping(id):
         flash('You do not have the authority to visit this page', 'warning')
         return redirect(url_for('home'))
     return render_template('ship.html',title='Shipping Details', ship=ship)
-'''
+

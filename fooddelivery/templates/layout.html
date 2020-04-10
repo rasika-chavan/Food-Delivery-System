@@ -16,6 +16,8 @@
     {% else %}
         <title>Home</title>
     {% endif %}
+    {{ moment.include_jquery() }}
+    {{ moment.include_moment() }}
     <style>
       /* Make the image fully responsive */
       .carousel-inner img {
@@ -77,7 +79,7 @@
 
           <!-- Navbar Right Side -->
           <div class="navbar-nav">
-            <a class="nav-item nav-link" href="{{ url_for('catneha') }}">MENU    </a>
+            <a class="nav-item nav-link" href="{{ url_for('menu') }}">MENU    </a>
             {% if current_user.is_authenticated %}
             <a class="nav-item nav-link" href="{{ url_for('cart') }}">Cart</a>
             <a class="nav-item nav-link" href="{{ url_for('orders') }}">Your Orders</a>
