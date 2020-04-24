@@ -1,7 +1,11 @@
+import os
+import secrets
 from flask import render_template, url_for, flash, redirect, request, session, g
-from fooddelivery import app, db, bcrypt
-from fooddelivery.forms import RegistrationForm, LoginForm, UpdateAccountForm, QuantityForm, PaymentDetails, SearchForm
-from fooddelivery.dbmodel import User, Product, Category, Cart, UserTransac, Order, Shipping
+from fooddelivery import app, db, bcrypt, mail
+from fooddelivery.forms import (RegistrationForm, LoginForm, UpdateAccountForm, QuantityForm, 
+                                PaymentDetails, SearchForm, RequestResetForm, ResetPasswordForm, 
+                                ReviewForm)
+from fooddelivery.dbmodel import User, Product, Category, Cart, UserTransac, Order, Shipping, Restaurant, Review
 from flask_login import login_user, current_user, logout_user, login_required
 from datetime import datetime, timedelta
 import base64
@@ -19,7 +23,7 @@ def home():
 
 @app.route("/menu")
 def menu():
-    return render_template('categorygrid.html')
+    return render_template('categorygrid.html', title='Menu')
 
 @app.route("/about")
 def about():
@@ -72,6 +76,48 @@ def login():
         else:
             flash('Login unsuccessful. Please check email and password', 'danger')
     return render_template('login.html', title='Login', form=form)
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Password Reset Request',
+                  sender='noreply@demo.com',
+                  recipients=[user.email])
+    msg.body = f'''To reset your password, visit the following link:
+{url_for('reset_token', token=token, _external=True)}
+If you did not make this request then simply ignore this email and no changes will be made.
+'''
+    mail.send(msg)
+
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('An email has been sent with instructions to reset your password.', 'info')
+        return redirect(url_for('login'))
+    return render_template('reset_request.html', title='Reset Password', form=form)
+
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('That is an invalid or expired token', 'warning')
+        return redirect(url_for('reset_request'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = hashed_password
+        db.session.commit()
+        flash('Your password has been updated! You are now able to log in', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Reset Password', form=form)
 
 
 @app.route("/logout")
@@ -139,26 +185,36 @@ def categorypage(catname):
         title="CAKE N PASTRIES"
     else:
         return redirect(url_for('home'))
-    prod=Product.query.filter_by(category_id=c).all()               
+    prod=Product.query.filter_by(category_id=c).all() 
     img=[]
-    for p in prod:
-        img.append(base64.b64encode(p.image_file1).decode('ascii'))
-    return render_template('category.html', prod=prod, img=img, l=len(prod), title=title)
+    prod2=[]
+    print(current_user)
+    #checking if the product comes from a restaurant in the same city   
+    for i in range(len(prod)):
+        resto = Restaurant.query.filter_by(rid=prod[i].rid).first()
+        if current_user.is_authenticated == False or (current_user.is_authenticated and (resto.city == current_user.city or current_user.city == None)):
+             img.append(base64.b64encode(prod[i].image_file1).decode('ascii'))    
+             prod2.append(prod[i])     
+
+    return render_template('category.html', prod=prod2, img=img, l=len(prod2), title=title)
 
 @app.route("/product<int:id>", methods=['GET', 'POST'])
 def product(id):
     session['url'] = None
     global b
-    prod=Product.query.filter_by(pid=id).first_or_404("This product does not exist")
-    img=[]
+    prod = Product.query.filter_by(pid=id).first_or_404("This product does not exist")
+    resto = Restaurant.query.filter_by(rid=prod.rid).first()
+    reviews = Review.query.filter_by(pid=id).all()
+    img = []
     img.append(base64.b64encode(prod.image_file1).decode('ascii'))
-    form=QuantityForm()
+    userrev = []
+    form = QuantityForm()
+    form2 = ReviewForm()
     if form.validate_on_submit():
         if not current_user.is_authenticated:
             session['url'] = url_for('product', id=id)
             flash('You must log in first', 'danger')  
             return redirect(url_for('login'))
-
         else:
             if form.buy.data:
                 l = []
@@ -178,7 +234,31 @@ def product(id):
                     db.session.add(c)
                     db.session.commit()
                 flash('The product was added to your cart!', 'success')
-    return render_template('product_desc.html', title='Product Details', prod=prod, img=img, form=form)
+    if form2.validate_on_submit():
+        review = Review.query.filter_by(pid=id, user_id=current_user.id).first()
+        for r in reviews:
+            user1 = User.query.filter_by(id=r.user_id).first()
+            userrev.append(user1.name)
+        if review == [] or review == None:
+            userprod = Order.query.filter_by(pid=id, uid=current_user.id).first()
+            if userprod == [] or userprod == None:
+                flash('You cannot leave a review for a product you have not purchased yet', 'danger')
+            else:
+                review = Review(pid=id, user_id=current_user.id, content=form2.content.data)
+                db.session.add(review)
+                db.session.commit()
+                flash('Your review was added!', 'success')
+                form2.content.data = ''
+                reviews = Review.query.filter_by(pid=id).all()
+                userrev = []
+                for r in reviews:
+                    user1 = User.query.filter_by(id=r.user_id).first()
+                    userrev.append(user1.name)
+        else:
+            flash('You have already left a review for this product', 'danger')
+
+    return render_template('product_desc.html', title='Product Details', prod=prod, img=img, form=form, form2=form2, resto=resto, 
+                        reviews=reviews, length=len(reviews), userrev=userrev)
 
 
 @app.route("/cart")
@@ -288,7 +368,7 @@ def checkout():
                 db.session.commit()
                 l.extend([user.name, prod.pid, prod.name, c[i].quantity, cost[i]])
                 b.append(l)
-                flash('Your order was processed successfully!', 'success')
+            flash('Your order was processed successfully!', 'success')
             Cart.query.filter_by(uid=user.id).delete()
             db.session.commit()
             return redirect(url_for('invoice'))
@@ -345,3 +425,14 @@ def shipping(id):
         return redirect(url_for('home'))
     return render_template('ship.html',title='Shipping Details', ship=ship)
 
+@app.route("/deletereview/<int:pid>")
+@login_required     
+def deletereview(pid):
+    review = Review.query.filter_by(user_id=current_user.id, pid=pid).first()
+    if review is None:
+        flash('There is no review to delete', 'info')
+    else:
+        Review.query.filter_by(user_id=current_user.id, pid=pid).delete()
+        db.session.commit()
+        flash('Your review was deleted', 'success')
+    return redirect(url_for('product', id=pid))

@@ -60,10 +60,16 @@
                 <a class="nav-link active" data-toggle="tab" href="#desp">Dish Description</a>
               </li>
               <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#restaurant">Restaurant Details</a>
+              </li>
+              <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#nutrition">Nutrition Facts</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#Shipping">Delivery Details</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#reviews">Reviews</a>
               </li>
         </ul>
         <div class="tab-content">
@@ -82,9 +88,53 @@
                   <br>{{ prod.iff }}</div></h5>
                  
             </div>
+            <div id="restaurant" class="container tab-pane fade"><br>
+                <h5>{{resto.name}}</h5>
+                <br>
+                <p>Contact Number: {{resto.contactno}}</p>
+                <p>Address:</p>
+                <p>{{resto.address_line1}}, {{resto.address_line2}}, {{resto.city}}-{{resto.pincode}}, {{resto.state}}, {{resto.country}}</p>
+            </div>
             <div id="Shipping" class="container tab-pane fade"><br>
                 <h5><div class="abc"><p>We will deliver any food item to your location around 30 minutes.</p>
                     <p>So, Sit back and relax, Your tasty food is on the way!!! </p></div></h5>
+            </div>
+            <div id="reviews" class="container tab-pane fade"><br>
+                <h4>Leave a review</h4>
+                <form method="POST" action="" class="text">
+                    {{ form2.hidden_tag() }}						 
+                    <div class="form-group">
+                        <h6>{{ form2.content.label(class="form-control-label") }}</h6>
+                        {% if form2.content.errors %}
+                            {{ form2.content(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form2.content.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form2.content(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form2.submit(class="btn btn-outline-primary") }}
+                    </div>
+                </form>
+                {% if length==0 %}
+                <h4>There are no reviews for this product.</h4>
+                {% else %}
+                <h4>User Reviews</h4>
+                {% for i in range(length) %}
+                <h5>{{userrev[i]}} on {{ moment(reviews[i].date_posted).format('MMMM Do YYYY, h:mm a') }}</h5>
+                <p>{{reviews[i].content}}</p>
+                {% if reviews[i].user_id == current_user.id %}
+                <a href="{{url_for('deletereview', pid=reviews[i].pid)}}" class="btn btn-outline-danger">
+                    Delete Review
+                </a>
+                {%endif%}
+                <hr>
+                {%endfor%}
+                {%endif%}
             </div>
           </div>
           <hr>

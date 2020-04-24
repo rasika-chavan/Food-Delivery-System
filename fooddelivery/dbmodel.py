@@ -25,23 +25,6 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return f"User('{self.name}', '{self.email}')"
 
-class Delivery_Boy(db.Model, UserMixin):
-    __tablename__="deliveryboy"
-    did = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(75), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
-    contactno = db.Column(db.Numeric(10,0), unique=True)
-    address_line1 = db.Column(db.String(50))
-    address_line2 = db.Column(db.String(50))
-    address_line3 = db.Column(db.String(50))
-    pincode = db.Column(db.Integer)
-    city = db.Column(db.String(50))
-    state = db.Column(db.String(50))
-    country = db.Column(db.String(50))
-
-    def __repr__(self):
-        return f"Seller('{self.name}', '{self.email}')"
 
 class Category(db.Model):
     __tablename__="category"
@@ -54,12 +37,11 @@ class Course(db.Model):
     catgry_id = db.Column(db.Integer, db.ForeignKey(Category.__table__.c.cid), nullable=False)
     coname = db.Column(db.String(100), nullable=False)
 
-class Restaurant(db.Model, UserMixin):
+class Restaurant(db.Model):
     __tablename__="restaurant"
     rid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(75), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
     contactno = db.Column(db.Numeric(10,0), unique=True)
     address_line1 = db.Column(db.String(50))
     address_line2 = db.Column(db.String(50))
@@ -68,11 +50,9 @@ class Restaurant(db.Model, UserMixin):
     city = db.Column(db.String(50))
     state = db.Column(db.String(50))
     country = db.Column(db.String(50))
-    category_name = db.Column(db.String(50), db.ForeignKey(Category.__table__.c.cname), nullable=False)
+    category_id = db.Column(db.String(50), db.ForeignKey(Category.__table__.c.cid), nullable=False)
 
-    def __repr__(self):
-        return f"Seller('{self.name}', '{self.email}')"
-
+    
 class Product(db.Model):
     __tablename__="product"
     pid = db.Column(db.Integer, primary_key=True)
@@ -83,7 +63,7 @@ class Product(db.Model):
     category_name = db.Column(db.String(50), db.ForeignKey(Category.__table__.c.cname), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey(Course.__table__.c.coid), nullable=False)
     course_name = db.Column(db.String(50), db.ForeignKey(Course.__table__.c.coname), nullable=False)
-    restro_id = db.Column(db.Integer, db.ForeignKey(Restaurant.__table__.c.rid), nullable=False)
+    rid = db.Column(db.Integer, db.ForeignKey(Restaurant.__table__.c.rid), nullable=False)
     image_file1 = db.Column(db.LargeBinary, nullable=False, default='default.jpg')
     quantity = db.Column(db.String(50), nullable=False)
     food_type = db.Column(db.String(10), nullable=False)
@@ -139,3 +119,12 @@ class Cart(db.Model):
     uid = db.Column(db.Integer, db.ForeignKey(User.__table__.c.id), primary_key=True)
     pid = db.Column(db.Integer, db.ForeignKey(Product.__table__.c.pid), primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
+
+class Review(db.Model):
+    __tablename__="review"
+    review_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.__table__.c.id), primary_key=True, nullable=False)
+    pid = db.Column(db.Integer, db.ForeignKey(Product.__table__.c.pid), primary_key=True, nullable=False)
+    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    content = db.Column(db.String(300), nullable=False)
+
